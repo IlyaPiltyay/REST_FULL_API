@@ -1,0 +1,34 @@
+
+
+
+SUPERUSER/admin:
+        USERNAME: Bucho
+        EMAIL: ilya.piltya@mail.ru
+        ПАРОЛЬ: DeE6RiRZ1Fh1Ti4TLdpT
+
+
+
+
+ПУТИ:
+        cd C:\Уроки\REST_FULL_API\myproject
+        cd \Django_Project
+
+
+
+ЗАПУСК СЕРВЕРА:
+        python manage.py runserver
+
+
+
+ЗАПУСК КОМАНДНОЙ СТРОКИ:
+        python manage.py shell
+
+
+
+МИГРАЦИИ:
+       python manage.py makemigrations
+       python manage.py migrate
+
+
+git rm -r --cached "C:\Уроки\Django_Project\Django_Project\MYSETING"
+git commit -m "Remove .idea directory from version control and update .gitignore"
