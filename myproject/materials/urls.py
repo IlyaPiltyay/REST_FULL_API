@@ -1,21 +1,25 @@
+from rest_framework.routers import SimpleRouter
 from django.urls import path
-from .views import (
-    CourseListCreateAPIView,
-    CourseRetrieveUpdateDestroyAPIView,
-    LessonListCreateAPIView,
-    LessonRetrieveUpdateDestroyAPIView
-)
 
-app_name = 'materials'  # имя приложения
+from .apps import MaterialsConfig
+from .views import CourseViewSet, LessonCreateAPIView, LessonUpdateAPIView, LessonListAPIView, LessonRetrieveAPIView, \
+    LessonDestroyAPIView
+
+app_name = MaterialsConfig.name  # имя вашего приложения
+
+# Создаем роутер
+router = SimpleRouter()
+router.register(r'courses', CourseViewSet, basename='course')  # Регистрация маршрута для курсов
+# Регистрация маршрута для уроков
+
 
 urlpatterns = [
-    # Маршруты для курсов
-    path('courses/', CourseListCreateAPIView.as_view(), name='course-list-create'),
-    path('courses/<int:pk>/', CourseRetrieveUpdateDestroyAPIView.as_view(), name='course-detail'),
-
-
-    # Маршруты для уроков
-    path('lessons/', LessonListCreateAPIView.as_view(), name='lesson-list-create'),
-    path('lessons/<int:pk>/', LessonRetrieveUpdateDestroyAPIView.as_view(), name='lesson-detail'),
-
+    path("lessons/", LessonListAPIView.as_view(), name="lesson_list"),
+    path("lessons/<int:pk>/", LessonRetrieveAPIView.as_view(), name="lesson_retrieve"),
+    path("lessons/create/", LessonCreateAPIView.as_view(), name="lesson_create"),
+    path("lessons/<int:pk>/delete/", LessonDestroyAPIView.as_view(), name="lesson_delete"),
+    path("lessons/<int:pk>/update/", LessonUpdateAPIView.as_view(), name="lesson_update"),
 ]
+
+# Включаем маршруты роутера
+urlpatterns += router.urls
