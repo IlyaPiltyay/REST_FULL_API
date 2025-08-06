@@ -1,4 +1,3 @@
-from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .apps import UsersConfig
@@ -6,14 +5,12 @@ from django.urls import path, include
 
 from .views import UserUpdateAPIView, UserDestroyAPIView, UserCreateAPIView, UserRetrieveAPIView, UserListAPIView, \
     PaymentViewSet
-
+from .views import MyTokenObtainPairView, MyTokenRefreshView
 
 app_name = UsersConfig.name  # имя приложения
 
-
 router = DefaultRouter()
 router.register(r'payments', PaymentViewSet)
-
 
 urlpatterns = [
     path("users/", UserListAPIView.as_view(), name="users_list"),
@@ -22,5 +19,7 @@ urlpatterns = [
     path("users/<int:pk>/delete/", UserDestroyAPIView.as_view(), name="users_delete"),
     path("users/<int:pk>/update/", UserUpdateAPIView.as_view(), name="users_update"),
     path('', include(router.urls)),
+    path('token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', MyTokenRefreshView.as_view(), name='token_obtain_pair'),
 
 ]
