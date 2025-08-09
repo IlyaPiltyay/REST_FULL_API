@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+
 from .models import Course, Lesson
 from .permissions import IsOwner, IsModerator
 from .serializers import CourseSerializer, LessonSerializer
