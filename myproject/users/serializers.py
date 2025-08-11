@@ -14,8 +14,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = '__all__'  # Используйте '__all__' для включения всех полей
+        fields = ['id','email', 'password','history_payment']
         extra_kwargs = {
             'password': {'write_only': True}  # Делаем поле 'password' доступным только для записи
         }
+
 

@@ -11,6 +11,11 @@ class UserCreateAPIView(CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
 
+    def perform_create(self, serializer):
+        user = serializer.save()
+        user.set_password(user.password)
+        user.save()
+
 
 class UserUpdateAPIView(UpdateAPIView):
     queryset = CustomUser.objects.all()
