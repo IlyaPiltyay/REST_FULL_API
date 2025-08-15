@@ -54,7 +54,11 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
-    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny']
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',  # Эта строка позволяет доступ всем пользователям
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'materials.pagination.MyPagination',  # Укажите правильный путь к вашему кастомному классу пагинации
+    'PAGE_SIZE': 10,  # Устанавливает количество объектов на одной странице
 }
 
 MIDDLEWARE = [

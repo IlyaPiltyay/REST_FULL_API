@@ -3,7 +3,7 @@ from django.urls import path
 
 from .apps import MaterialsConfig
 from .views import CourseViewSet, LessonCreateAPIView, LessonUpdateAPIView, LessonListAPIView, LessonRetrieveAPIView, \
-    LessonDestroyAPIView
+    LessonDestroyAPIView, SubscriptionView
 
 app_name = MaterialsConfig.name  # имя вашего приложения
 
@@ -19,6 +19,7 @@ urlpatterns = [
     path("lessons/create/", LessonCreateAPIView.as_view(), name="lesson_create"),
     path("lessons/<int:pk>/delete/", LessonDestroyAPIView.as_view(), name="lesson_delete"),
     path("lessons/<int:pk>/update/", LessonUpdateAPIView.as_view(), name="lesson_update"),
+    path('courses/subscribe/', SubscriptionView.as_view(), name='manage-subscription'),
 ]
 
 # Включаем маршруты роутера

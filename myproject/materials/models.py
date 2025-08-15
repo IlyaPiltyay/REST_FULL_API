@@ -22,3 +22,11 @@ class Lesson(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Subscription(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Внешний ключ на модель пользователя
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)  # Внешний ключ на модель курса
+
+    def __str__(self):
+        return f"{self.user.email} subscribed to {self.course.title}"

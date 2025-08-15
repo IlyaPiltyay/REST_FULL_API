@@ -1,9 +1,14 @@
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from .models import Course, Lesson
+from .models import Course, Lesson, Subscription
+from .pagination import MyPagination
 from .permissions import IsOwner, IsModerator
-from .serializers import CourseSerializer, LessonSerializer
-from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView, UpdateAPIView, DestroyAPIView
-from rest_framework import viewsets, permissions
+from .serializers import CourseSerializer, LessonSerializer, SubscriptionSerializer
+from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView, UpdateAPIView, DestroyAPIView, \
+    get_object_or_404
+from rest_framework import viewsets, permissions, status
 
 
 # CRUD для курсов с использованием ViewSet
@@ -33,6 +38,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 class LessonCreateAPIView(CreateAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
+    # permission_classes = [AllowAny]
     permission_classes = [permissions.IsAuthenticated, ~IsModerator]
 
     def perform_create(self, serializer):
@@ -63,3 +69,41 @@ class LessonListAPIView(ListAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class SubscriptionView(APIView):
+    pagination_class = MyPagination
+    permission_classes = [IsAuthenticated]  # Проверка аутентификации пользователя
+
+    def post(self, request, *args, **kwargs):
+        user = request.user  # Получаем текущего пользователя
+        course_id = request.data.get("course_id")  # Получаем ID курса из данных запроса
+        course_item = get_object_or_404(Course, id=course_id)  # Получаем курс из базы данных
+
+        # Получаем объекты подписки текущего пользователя на данный курс
+        subs_item = Subscription.objects.filter(user=user, course=course_item)
+
+        # Если подписка существует, то удаляем ее
+        if subs_item.exists():
+            subs_item.delete()  # Удаляем подписку
+            message = 'Подписка удалена'
+        else:
+            # Если подписки нет, создаем новую
+            Subscription.objects.create(user=user, course=course_item)
+            message = 'Подписка добавлена'
+
+        # Возвращаем ответ в API
+        return Response({"message": message}, status=status.HTTP_200_OK)
+
+    def get(self, request):
+        queryset = Subscription.objects.filter(user=request.user)  # Получаем подписки текущего пользователя
+
+        # Пагинация
+        paginator = MyPagination()
+        paginated_queryset = paginator.paginate_queryset(queryset, request)  # Пагинируем запрос
+
+        # Сериализация данных
+        serializer = SubscriptionSerializer(paginated_queryset, many=True)
+
+        # Возвращаем ответ с пагинацией
+        return paginator.get_paginated_response(serializer.data)
