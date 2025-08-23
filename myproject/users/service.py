@@ -5,12 +5,12 @@ import stripe
 stripe.api_key = os.getenv('STRIPE_API_KEY')
 
 
-def create_price(amount):
-    """Создает цену в страйпе"""
+def create_price(amount, course_name):
+    """Создает цену в Stripe с указанием названия курса"""
     return stripe.Price.create(
         currency="rub",
         unit_amount=int(amount * 100),
-        product_data={"name": "buy"},
+        product_data={"name": course_name},  # Используем название курса
     )
 
 
@@ -25,4 +25,5 @@ def create_sessions(price):
 
 
 def create_product(product):
+    """Создает продукт в страйпе"""
     return stripe.Product.create(name=product)

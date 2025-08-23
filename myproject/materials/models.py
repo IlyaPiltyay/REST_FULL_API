@@ -15,6 +15,7 @@ class Course(models.Model):
         verbose_name="Создатель",
     )
 
+
     def __str__(self):
         return self.name
 
