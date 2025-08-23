@@ -1,13 +1,12 @@
+
 from rest_framework import serializers
 
 from .models import CustomUser, Payment
-from ..materials.models import Course, Lesson
 
 
 class PaymentSerializer(serializers.ModelSerializer):
-
-    paid_course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
-    paid_lesson = serializers.PrimaryKeyRelatedField(queryset=Lesson.objects.all())
+    # paid_course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
+    # paid_lesson = serializers.PrimaryKeyRelatedField(queryset=Lesson.objects.all())
 
     class Meta:
         model = Payment

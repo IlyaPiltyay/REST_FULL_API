@@ -79,18 +79,14 @@ class PaymentViewSet(viewsets.ModelViewSet):
         if payment.amount is None or payment.amount <= 0:
             raise ValueError("Payment amount must be provided and greater than zero.")
 
-        course_name = None
-
-        # Проверяем связан ли курс с платежом
+        # Проверяем, что курс связан с платежом
         if payment.paid_course is not None:
             course_name = payment.paid_course.name  # Получение названия курса
-        elif payment.paid_lesson is not None:
-            course_name = payment.paid_lesson.course.name  # Получение названия курса из урока
         else:
-            raise ValueError("Neither Course nor Lesson ID is associated with this payment.")
+            raise ValueError("Course ID must be associated with this payment.")
 
-        # Создаем продукт (если нужно)
-        create_product(course_name)  # Здесь можно также передать более детальную информацию
+        # Создаем продукт в Stripe
+        create_product(course_name)
 
         # Передаем название курса в create_price
         price = create_price(payment.amount, course_name)  # Используем название курса
@@ -98,7 +94,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
         # Создаем сессию в Stripe
         session_id, payment_link = create_sessions(price)
 
-        # Обновляем платеж объектами session_id и payment_link
+        # Обновляем платеж, добавляя session_id и payment_link
         payment.session_id = session_id
         payment.payment_link = payment_link
 
