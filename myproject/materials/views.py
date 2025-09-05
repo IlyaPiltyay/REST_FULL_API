@@ -17,6 +17,7 @@ from rest_framework.generics import (
     get_object_or_404,
 )
 from rest_framework import viewsets, permissions, status
+from .task import send_course_update_email
 
 
 # CRUD для курсов с использованием ViewSet
@@ -40,9 +41,28 @@ class CourseViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def perform_create(self, serializer):
-        new_course = serializer.save()
-        new_course.owner = self.request.user
-        new_course.save()
+        new_course = serializer.save(owner=self.request.user)
+        # Отправляем уведомление о создании нового курса
+        send_course_update_email.delay(new_course.id)
+
+    def perform_update(self, serializer):
+        updated_course = serializer.save()
+        # Отправляем уведомление об обновлении курса
+        send_course_update_email.delay(updated_course.id)
+
+    def subscribe(self, request, course_id=None):
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response({'detail': 'Курс не найден.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Обработка подписки
+        subscription, created = Subscription.objects.get_or_create(user=request.user, course=course)
+
+        if created:
+            return Response({'status': 'subscribed'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'status': 'already subscribed'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # CRUD для уроков с использованием generic

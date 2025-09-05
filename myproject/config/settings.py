@@ -18,21 +18,13 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if os.getenv("DEBUG") == "True" else False
 
 ALLOWED_HOSTS = []
-
-# Application definition
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -48,6 +40,7 @@ INSTALLED_APPS = [
     "django_filters",
     "users",
     "materials",
+    'django_celery_beat',
 ]
 
 # Настройки JWT-токенов
@@ -74,15 +67,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# CORS_ALLOWED_ORIGINS = [
-#     "https://read-only.example.com",
-#     "https://read-and-write.example.com",
-# ]
-#
-# CSRF_TRUSTED_ORIGINS = [
-#     "https://read-and-write.example.com",
-# ]
-
 CORS_ALLOW_ALL_ORIGINS = False
 ROOT_URLCONF = "config.urls"
 
@@ -103,8 +87,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
@@ -115,8 +97,6 @@ DATABASES = {
         "PORT": os.getenv("PORT"),
     }
 }
-
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -135,8 +115,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = "users.CustomUser"
 
-
-
 LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "Europe/Moscow"
@@ -144,15 +122,11 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
-
-
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -162,3 +136,36 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=555),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
+
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = int(os.getenv("REDIS_PORT"))
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.mail.ru"
+EMAIL_PORT = 2525
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/0',
+    }
+}
+
+CELERY_BROKER_URL = f'redis://localhost:{REDIS_PORT}/0'  # Например, Redis, который по умолчанию работает на порту 6379
+
+# URL-адрес брокера результатов, также Redis
+CELERY_RESULT_BACKEND = f'redis://localhost:{REDIS_PORT}/0'
+
+# Часовой пояс для работы Celery
+CELERY_TIMEZONE = "Europe/Moscow"
+
+# Флаг отслеживания выполнения задач
+CELERY_TASK_TRACK_STARTED = True
+
+# Максимальное время на выполнение задачи
+CELERY_TASK_TIME_LIMIT = 30 * 60

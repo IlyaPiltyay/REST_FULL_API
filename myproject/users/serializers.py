@@ -5,8 +5,6 @@ from .models import CustomUser, Payment
 
 
 class PaymentSerializer(serializers.ModelSerializer):
-    # paid_course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
-    # paid_lesson = serializers.PrimaryKeyRelatedField(queryset=Lesson.objects.all())
 
     class Meta:
         model = Payment
