@@ -33,3 +33,11 @@
    poetry run python manage.py migrate
 4. Запустите сервер разработки:
    poetry run python manage.py runserver
+
+### Установка и запуск Docker
+1. docker build -t django-app .    Создание образа
+2. docker run -d --name django-app -p 8000:8000 -v media:/app/media django-app   Запуск контейнера 
+3. docker ps   список контейнеров 
+4. docker stop django-app 
+5. docker rm django-app
+6. docker logs django-app
