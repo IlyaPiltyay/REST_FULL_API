@@ -17,21 +17,21 @@ RUN curl -sSL https://install.python-poetry.org | python3 -
 # Добавляем Poetry в PATH
 ENV PATH="/root/.local/bin:$PATH"
 
-# Копируем pyproject.toml и poetry.lock для установки зависимостей
+# Копируем зависимости
 COPY pyproject.toml poetry.lock ./
 
 # Устанавливаем зависимости Python с помощью Poetry
 RUN poetry install --no-root
 
 # Копируем исходный код приложения в контейнер
-COPY myproject/.
+COPY ./myproject /app/myproject
 
 # Определяем переменные окружения
 ENV SECRET_KEY="django-insecure-3go67lh0+!6ymf%ivk770n*ta745&=#&3w=jj6^uyu+7jb*cf0"
 ENV CELERY_BROKER_URL="redis://redis:6379/0"
 ENV CELERY_BACKEND="redis://redis:6379/0"
 ENV DJANGO_SETTINGS_MODULE=myproject.config.settings
-ENV PYTHONPATH="/app"
+ENV PYTHONPATH="/app/myproject:/app"
 
 # Создаем директорию для медиафайлов
 RUN mkdir -p /app/media

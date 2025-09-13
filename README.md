@@ -21,6 +21,7 @@
 - Backend: Django (Python) с использованием Django REST Framework для создания API.
 - База данных: PostgreSQL для хранения данных пользователей, курсов и другой информации.
 - Документирование: swagger, redoc доступно по адресу http://127.0.0.1:8000/swagger/ или http://127.0.0.1:8000/redoc/
+- Docker. В данном документе вы найдете инструкции по запуску и управлению контейнерами с помощью Docker.
 
 ### Установка и запуск
 
@@ -34,10 +35,42 @@
 4. Запустите сервер разработки:
    poetry run python manage.py runserver
 
-### Установка и запуск Docker
-1. docker build -t django-app .    Создание образа
-2. docker run -d --name django-app -p 8000:8000 -v media:/app/media django-app   Запуск контейнера 
-3. docker ps   список контейнеров 
-4. docker stop django-app 
-5. docker rm django-app
-6. docker logs django-app
+## Основные команды Docker и Docker Compose
+
+- **Остановить запущенный контейнер**:
+    ```bash
+    docker stop django-app
+    ```
+- **Остановить и удалить все контейнеры, сети и тома**:
+    ```bash
+    docker-compose down
+    ```
+- **Удалить конкретный контейнер**:
+    ```bash
+    docker rm django-app
+    ```
+- **Просмотреть логи конкретного контейнера**:
+    ```bash
+    docker logs django-app
+    ```
+- **Построить образ Docker из `Dockerfile`**:
+    ```bash
+    docker build -t django-app .
+    ```
+- **Показать все запущенные контейнеры**:
+    ```bash
+    docker ps
+    ```
+- **Запустить контейнеры с пересборкой**:
+    ```bash
+    docker compose up --build
+    ```
+- **Получить доступ к контейнеру через оболочку**:
+    ```bash
+    docker exec -it <container_id> /bin/bash
+    ```
+- **Перейти в установленный рабочий каталог и просмотреть файлы**:
+    ```bash
+    ls -l
+    ```
+

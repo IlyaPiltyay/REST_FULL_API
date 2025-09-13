@@ -7,7 +7,7 @@ from celery.schedules import crontab
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
 # Создание экземпляра объекта Celery
-app = Celery('config')  # или 'myproject', если ваш проект называется myproject
+app = Celery('myproject')
 
 # Загрузка настроек из файла Django
 app.config_from_object('django.conf:settings', namespace='CELERY')
@@ -17,7 +17,7 @@ app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
     'block-inactive-users-every-month': {
-        'task': 'myproject.users.tasks.block_inactive_users',
+        'task': 'users.tasks.block_inactive_users',
         'schedule': crontab(day_of_month='1', hour='0', minute='0'),  # Выполнять 1-го числа каждого месяца
     },
 }

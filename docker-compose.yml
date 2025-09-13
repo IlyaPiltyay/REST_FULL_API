@@ -1,59 +1,46 @@
-version: '3.8'
-
 services:
   web:
     build: .
-    command: >
-      bash -c "python manage.py migrate &&
-                python manage.py collectstatic --noinput &&
-                poetry run python manage.py runserver 0.0.0.0:8000"
-    env_file:
-      - .env
-    volumes:
-      - .:/app  # Связываем локальную папку с /app в контейнере
+    env_file: ".env"
+    working_dir: /app/myproject
+    command: poetry run python manage.py runserver 0.0.0.0:8000
     ports:
-      - "8080:8000"  # Проброс приложения на порт 8080
+      - "8000:8000"
     depends_on:
-      - db
-      - redis
-    working_dir: /app
-
-  db:
-    image: postgres:latest
-    env_file:
-      - .env
-    expose:
-      - "5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:latest
-    ports:
-      - "6379:6379"
+      - postgres  # Указывает, что web-сервис зависит от postgres
+      - redis      # Указывает, что web-сервис также зависит от redis (опционально)
 
   celery:
+    env_file: ".env"
     build: .
-    command: poetry run celery -A myproject.config worker --loglevel=info
-    env_file:
-      - .env
-    volumes:
-      - .:/app
+    working_dir: /app/myproject
+    command: poetry run celery -A config worker --loglevel=info --pool=solo
     depends_on:
-      - db
-      - redis
-    working_dir: /app
+      - postgres  # Указывает, что celery также зависит от postgres
+      - redis     # Указывает, что celery зависит от redis
 
   celery_beat:
+    env_file: ".env"
     build: .
-    command: poetry run celery -A myproject.config beat --loglevel=info
-    env_file:
-      - .env
-    volumes:
-      - .:/app
+    working_dir: /app/myproject
+    command: poetry run celery -A config beat --loglevel=info
     depends_on:
-      - redis
-    working_dir: /app
+      - postgres  # Указывает, что celery_beat также зависит от postgres
+      - redis     # Указывает, что celery_beat зависит от redis
+
+  postgres:
+    image: postgres:latest
+    env_file: ".env"
+    ports:
+      - "5432:5432"  # Открываем порт PostgreSQL
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Сохраняем данные между перезапусками
+
+  redis:
+    image: redis:latest  # Используем официальный образ Redis
+    ports:
+      - "6379:6379"  # Открываем порт для Redis
 
 volumes:
-  postgres_data: {}
+  postgres_data:  # Объявляем том для сохранения данных PostgreSQL
+  static_volume:
