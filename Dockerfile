@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.11-slim
 
 # Устанавливаем рабочую директорию в контейнере
 WORKDIR /app
@@ -21,17 +21,11 @@ ENV PATH="/root/.local/bin:$PATH"
 COPY pyproject.toml poetry.lock ./
 
 # Устанавливаем зависимости Python с помощью Poetry
-RUN poetry install --no-root
+RUN poetry install --no-root && poetry show
 
 # Копируем исходный код приложения в контейнер
 COPY ./myproject /app/myproject
 
-# Определяем переменные окружения
-ENV SECRET_KEY="django-insecure-3go67lh0+!6ymf%ivk770n*ta745&=#&3w=jj6^uyu+7jb*cf0"
-ENV CELERY_BROKER_URL="redis://redis:6379/0"
-ENV CELERY_BACKEND="redis://redis:6379/0"
-ENV DJANGO_SETTINGS_MODULE=myproject.config.settings
-ENV PYTHONPATH="/app/myproject:/app"
 
 # Создаем директорию для медиафайлов
 RUN mkdir -p /app/media
