@@ -31,12 +31,10 @@ jobs:
 
 
       - name: Run migrations
-        run: |
-          echo "Skipping migrations since Postgres service is removed."
+        run: python manage.py migrate
 
       - name: Run tests
-        run: |
-          echo "Skipping tests since Postgres service is removed."
+        run: python manage.py test
 
   build:
     runs-on: ubuntu-latest

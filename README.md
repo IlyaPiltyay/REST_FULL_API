@@ -74,3 +74,19 @@
     ls -l
     ```
 
+### 1. Настройка удаленного сервера
+
+1. Подключитесь к вашему удаленному серверу:
+   Используйте SSH для доступа к вашему серверу:
+   ssh <user>@<server-ip>
+2. Обновите пакеты системы:
+   sudo apt update && sudo apt upgrade -y
+3. Установите Docker:
+   Для установки Docker выполните следующие команды:
+   sudo apt install apt-transport-https ca-certificates curl software-properties-common -y
+   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+   sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+   sudo apt update
+   sudo apt install docker-ce -y
+4. Проверьте, что Docker установлен:
+   sudo systemctl status docker
