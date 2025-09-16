@@ -138,7 +138,7 @@ SIMPLE_JWT = {
 }
 
 REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = int(os.getenv("REDIS_PORT"))
+REDIS_PORT = int(os.getenv("REDIS_PORT",6379))
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.mail.ru"
