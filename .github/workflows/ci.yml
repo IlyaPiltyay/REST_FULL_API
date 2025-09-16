@@ -5,10 +5,27 @@ on: [ push, pull_request ]
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      REDIS_PORT: ${{ secrets.REDIS_PORT }}
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+    services:
+      db: # Название сервиса должно совпадать с HOST в DATABASES
+        image: postgres:13
+        env:
+          POSTGRES_DB: rest_full_api  # Соответствует NAME
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 6577
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
+    env:
+      NAME: rest_full_api  # Имя базы данных
+      USER: postgres  # Пользователь
+      PASSWORD: 6577  # Пароль
+      HOST: db  # Имя сервиса
+      PORT: 5432  # Порт
 
     steps:
       - name: Check out code
@@ -26,15 +43,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --no-root
+          poetry install
 
-      - name: Cache Poetry
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-
+      - name: Wait for Postgres to be ready
+        run: |
+          until pg_isready -h db -p 5432 -U postgres; do
+            echo "Waiting for postgres..."
+            sleep 2
+          done
 
       - name: Run migrations
         run: |
