@@ -1,31 +1,29 @@
 name: Django CI
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_DB: rest_full_api
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 6577
+
     services:
       db:
-        image: postgres:13
-        env:
-          POSTGRES_DB: rest_full_api
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: 6577
+        image: postgres:latest
+        environment:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}    # Используйте secrets для переменных
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres"
+          --health-cmd "pg_isready -U ${POSTGRES_USER}"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
-    env:
-      NAME: rest_full_api
-      USER: postgres
-      PASSWORD: 6577
-      HOST: db
-      PORT: 5432
 
     steps:
       - name: Check out code
@@ -49,7 +47,7 @@ jobs:
         run: |
           until pg_isready -h db -p 5432 -U postgres; do
             echo "Waiting for postgres..."
-            sleep 2
+            sleep 5
           done
 
       - name: Run migrations
