@@ -5,6 +5,10 @@ on: [ push, pull_request ]
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      REDIS_PORT: ${{ secrets.REDIS_PORT }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+
 
     steps:
       - name: Check out code
