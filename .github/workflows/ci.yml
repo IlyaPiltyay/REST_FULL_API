@@ -25,7 +25,7 @@ jobs:
           poetry install
 
       - name: Cache Poetry
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
