@@ -34,11 +34,11 @@ jobs:
 
       - name: Run migrations
         run: |
-          poetry run python manage.py migrate
+          poetry run python myproject/manage.py migrate
 
       - name: Run tests
         run: |
-          poetry run python manage.py test
+          poetry run python myproject/manage.py test
   build:
     runs-on: ubuntu-latest
     needs: test
