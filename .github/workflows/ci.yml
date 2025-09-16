@@ -1,15 +1,15 @@
 name: Django CI
 
-on: [ push, pull_request ]
+on: [push, pull_request]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     services:
-      db: # Название сервиса должно совпадать с HOST в DATABASES
+      db:
         image: postgres:13
         env:
-          POSTGRES_DB: rest_full_api  # Соответствует NAME
+          POSTGRES_DB: rest_full_api
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: 6577
         ports:
@@ -21,11 +21,11 @@ jobs:
           --health-retries 5
 
     env:
-      NAME: rest_full_api  # Имя базы данных
-      USER: postgres  # Пользователь
-      PASSWORD: 6577  # Пароль
-      HOST: db  # Имя сервиса
-      PORT: 5432  # Порт
+      NAME: rest_full_api
+      USER: postgres
+      PASSWORD: 6577
+      HOST: db
+      PORT: 5432
 
     steps:
       - name: Check out code
@@ -59,10 +59,10 @@ jobs:
       - name: Run tests
         run: |
           poetry run python myproject/manage.py test
+
   build:
     runs-on: ubuntu-latest
     needs: test
-
 
     steps:
       - name: Check out code
@@ -76,6 +76,7 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -90,7 +91,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
-            docker stop myapp || true
-            docker rm myapp || true
+            docker stop myapp || true  # Исправлено: добавлен оператор || для игнорирования возможной ошибки
+            docker rm myapp || true    # Исправлено: добавлен оператор || для игнорирования возможной ошибки
             docker run -d --name myapp -p 80:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
           EOF
