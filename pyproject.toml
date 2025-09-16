@@ -5,6 +5,10 @@ description = ""
 authors = [
     {name = "Ilya",email = "ilya.piltyay@gmail.com"}
 ]
+packages = [
+    { include = "myproject" }
+]
+
 readme = "README.md"
 requires-python = ">=3.11,<4.0"
 dependencies = [
