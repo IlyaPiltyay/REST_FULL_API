@@ -28,8 +28,7 @@ jobs:
         run: |
           poetry install --no-root
 
-      # Удалены шаги, связанные с постгресом
-      # Например, команды на миграцию и тесты могут вызвать ошибку, если БД недоступна
+
 
       - name: Run migrations
         run: |
@@ -62,7 +61,7 @@ jobs:
 
     steps:
       - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.8.1
+        uses: webfactory/ssh-agent@latest
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
@@ -70,9 +69,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
-            # Удаляем контейнер, если он существует, игнорируя ошибки
             docker stop myapp || true
             docker rm myapp || true
-            # Запускаем новый контейнер
             docker run -d --name myapp -p 80:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
           EOF
