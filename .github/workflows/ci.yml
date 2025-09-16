@@ -31,10 +31,15 @@ jobs:
 
 
       - name: Run migrations
-        run: python manage.py migrate
+        run: |
+              cd myproject
+              poetry run python manage.py migrate
 
       - name: Run tests
-        run: python manage.py test
+        run: |
+              cd myproject
+              poetry run python manage.py test
+  
 
   build:
     runs-on: ubuntu-latest
