@@ -1,0 +1,52 @@
+services:
+  web:
+    build: .
+    env_file: ".env"
+    working_dir: /app/myproject
+    command: >
+      sh -c "poetry run python manage.py migrate && poetry run python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db  # Указывает, что web-сервис зависит от postgres
+      - redis      # Указывает, что web-сервис также зависит от redis (опционально)
+
+  celery:
+    env_file: ".env"
+    build: .
+    working_dir: /app/myproject
+    command: poetry run celery -A config worker --loglevel=info --pool=solo
+    depends_on:
+      - db  # Указывает, что celery также зависит от postgres
+      - redis     # Указывает, что celery зависит от redis
+
+  celery_beat:
+    env_file: ".env"
+    build: .
+    working_dir: /app/myproject
+    command: poetry run celery -A config beat --loglevel=info
+    depends_on:
+      - db  # Указывает, что celery_beat также зависит от postgres
+      - redis     # Указывает, что celery_beat зависит от redis
+
+  db:
+    image: postgres:latest
+    environment: # Указываем переменные окружения для создания БД
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "5432:5432"  # Пробрасываем порт
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Сохраняем данные между перезапусками
+
+
+  redis:
+    image: redis:latest  # Используем официальный образ Redis
+    ports:
+      - "6379:6379"  # Открываем порт для Redis
+
+volumes:
+  postgres_data:  # Объявляем том для сохранения данных PostgreSQL
+  static_volume:
