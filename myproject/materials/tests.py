@@ -9,7 +9,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 # Теперь можно импортировать
-from materials.models import Course, Lesson, SubscriptionView
+from materials.models import Course, Lesson, Subscription
 
 
 class LessonTests(APITestCase):
