@@ -1,9 +1,8 @@
-name: Django CI
-
-on: [ push, pull_request ]
+name: CI
+on: [push, pull_request]
 
 jobs:
-  test:
+  test-and-build:
     runs-on: ubuntu-latest
     env:
       POSTGRES_DB: rest_full_api
@@ -25,18 +24,13 @@ jobs:
           --health-retries 5
 
     steps:
-      - name: Check out code
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libpq-dev postgresql-client
 
       - name: Install Poetry
         run: |
@@ -44,31 +38,27 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
-        run: |
-          poetry install --no-root
+        run: poetry install --no-root
 
-      - name: Ensure SECRET_KEY available (use repo secret or generate temporary)
+      - name: Prepare env (SECRET_KEY, DATABASE_URL)
         run: |
+          # SECRET_KEY: prefer repo secret, else generate temporary
           if [ -n "${{ secrets.SECRET_KEY }}" ]; then
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> $GITHUB_ENV
           else
-            python - <<'PY' > /tmp/tmp_secret
-            from django.core.management.utils import get_random_secret_key
-            print(get_random_secret_key())
-            PY
-            echo "SECRET_KEY=$(cat /tmp/tmp_secret)" >> $GITHUB_ENV
+            echo "SECRET_KEY=$(python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')" >> $GITHUB_ENV
           fi
-
-      - name: Export DATABASE_URL (use secret if provided, otherwise construct for local service)
-        run: |
+          # DATABASE_URL: prefer repo secret, else local postgres service (localhost in Actions)
           if [ -n "${{ secrets.DATABASE_URL }}" ]; then
             echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
           else
-            # services.postgres in Actions is available on localhost
             echo "DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}" >> $GITHUB_ENV
           fi
 
-      - name: Wait for Postgres to be ready
+      - name: Install pg_isready (small dep)
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Wait for Postgres
         run: |
           for i in {1..30}; do
             if pg_isready -h localhost -p 5432 -U "$POSTGRES_USER" -q; then
@@ -79,23 +69,11 @@ jobs:
             sleep 1
           done
 
-      - name: Run migrations
+      - name: Migrate and Test
         run: |
           cd myproject
           poetry run python manage.py migrate --noinput
-
-      - name: Run tests
-        run: |
-          cd myproject
           poetry run python manage.py test
-
-  build:
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
 
       - name: Log in to Docker Hub
         run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
@@ -103,24 +81,18 @@ jobs:
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }} .
 
-      - name: Push Docker image to Docker Hub
+      - name: Push Docker image
         run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Set up SSH
+      - name: Deploy to server (SSH)
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
-
-      - name: Deploy to Server
+      - name: Remote deploy
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
             docker stop myapp || true
             docker rm myapp || true
             docker run -d --name myapp -p 80:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
-          EOF
+                    EOF
