@@ -4,12 +4,12 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 import sys
 import os
-from myproject.materials.models import Course, Lesson, Subscription
+# from myproject.materials.models import Course, Lesson, Subscription
 # Были проблемы с импортом, смог решить только таким способом
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 # Теперь можно импортировать
-# from materials.models import Course, Lesson, SubscriptionView
+from materials.models import Course, Lesson, SubscriptionView
 
 
 class LessonTests(APITestCase):
