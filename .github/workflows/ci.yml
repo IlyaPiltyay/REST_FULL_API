@@ -59,7 +59,7 @@ jobs:
             echo "SECRET_KEY=$(cat /tmp/tmp_secret)" >> $GITHUB_ENV
           fi
 
-      - name: Export DATABASE_URL (use secret if provided, otherwise local service)
+      - name: Export DATABASE_URL (use secret if provided, otherwise construct for local service)
         run: |
           if [ -n "${{ secrets.DATABASE_URL }}" ]; then
             echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
