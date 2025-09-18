@@ -4,12 +4,12 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 import sys
 import os
-
+from myproject.materials.models import Course, Lesson, Subscription
 # Были проблемы с импортом, смог решить только таким способом
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 # Теперь можно импортировать
-from materials.models import Course, Lesson, Subscription
+# from materials.models import Course, Lesson, SubscriptionView
 
 
 class LessonTests(APITestCase):
@@ -117,7 +117,7 @@ class SubscriptionViewTests(APITestCase):
 
     def test_add_subscription(self):
         """Тестирование добавления подписки на курс"""
-        url = reverse("materials:manage-subscription")
+        url = reverse("materials:lesson_list")
         response = self.client.post(url, {"course_id": self.course.id})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -132,7 +132,7 @@ class SubscriptionViewTests(APITestCase):
             user=self.user, course=self.course
         )  # Сначала создаем подписку
 
-        url = reverse("materials:manage-subscription")
+        url = reverse("materials:lesson_list")
         response = self.client.post(url, {"course_id": self.course.id})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -145,7 +145,7 @@ class SubscriptionViewTests(APITestCase):
         """Тестирование сообщения, если пользователь уже подписан на курс"""
         Subscription.objects.create(user=self.user, course=self.course)
 
-        url = reverse("materials:manage-subscription")
+        url = reverse("materials:lesson_list")
         response = self.client.post(url, {"course_id": self.course.id})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
