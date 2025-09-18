@@ -22,6 +22,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -31,7 +32,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install system deps (for psycopg2 & pg_isready)
+      - name: Install system deps (psycopg2 & pg_isready)
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libpq-dev postgresql-client
@@ -45,16 +46,21 @@ jobs:
         run: |
           poetry install --no-root
 
-      - name: Prepare env (SECRET_KEY, DATABASE_URL)
+      - name: Prepare CI DB env (force TCP host)
         run: |
-          # SECRET_KEY: use repo secret if set, else generate temporary without Django dependency
+          # В docker-compose у вас DB_HOST='db'; в CI сервис доступен на 127.0.0.1
+          echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
+          # Для уверенности также задаём libpq переменные
+          echo "PGHOST=127.0.0.1" >> $GITHUB_ENV
+          echo "PGPORT=5432" >> $GITHUB_ENV
+          echo "PGUSER=${POSTGRES_USER}" >> $GITHUB_ENV
+          echo "PGPASSWORD=${POSTGRES_PASSWORD}" >> $GITHUB_ENV
+          # SECRET_KEY: используем временный, если у вас нет секрета в репо
           if [ -n "${{ secrets.SECRET_KEY }}" ]; then
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> $GITHUB_ENV
           else
             echo "SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" >> $GITHUB_ENV
           fi
-          # DATABASE_URL: force TCP to 127.0.0.1 to avoid Unix-socket attempts
-          echo "DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@127.0.0.1:5432/${POSTGRES_DB}" >> $GITHUB_ENV
 
       - name: Wait for Postgres
         run: |
@@ -109,4 +115,4 @@ jobs:
             docker stop myapp || true
             docker rm myapp || true
             docker run -d --name myapp -p 80:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
-          EOF  
+          EOF

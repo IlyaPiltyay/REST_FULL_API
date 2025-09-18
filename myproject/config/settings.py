@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
@@ -87,16 +88,32 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.getenv("NAME"),
-        "USER": os.getenv("USER"),
-        "PASSWORD": os.getenv("PASSWORD"),
-        "HOST": os.getenv("HOST"),
-        "PORT": os.getenv("PORT"),
+db_url = os.getenv('DATABASE_URL')
+if db_url:
+    # простая разборка DATABASE_URL без дополнительных зависимостей
+    parsed = urlparse(db_url)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': parsed.path.lstrip('/'),
+            'USER': parsed.username,
+            'PASSWORD': parsed.password,
+            'HOST': parsed.hostname,
+            'PORT': parsed.port or '',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.getenv('POSTGRES_DB', 'rest_full_api'),
+            'USER': os.getenv('POSTGRES_USER', 'postgres'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+            # по умолчанию 'db' для docker-compose, но можно переопределить переменной DB_HOST (в CI — 127.0.0.1)
+            'HOST': os.getenv('DB_HOST', os.getenv('HOST', 'db')),
+            'PORT': os.getenv('POSTGRES_PORT', os.getenv('PORT', '5432')),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -138,7 +155,7 @@ SIMPLE_JWT = {
 }
 
 REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = int(os.getenv("REDIS_PORT",6379))
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.mail.ru"
