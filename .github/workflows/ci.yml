@@ -2,7 +2,7 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  test-and-build:
+  ci:
     runs-on: ubuntu-latest
     env:
       POSTGRES_DB: rest_full_api
@@ -42,17 +42,18 @@ jobs:
 
       - name: Prepare env (SECRET_KEY, DATABASE_URL)
         run: |
-          # SECRET_KEY: prefer repo secret, else generate temporary
+          # SECRET_KEY: prefer repo secret, else generate (Django is installed above)
           if [ -n "${{ secrets.SECRET_KEY }}" ]; then
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> $GITHUB_ENV
           else
             echo "SECRET_KEY=$(python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')" >> $GITHUB_ENV
           fi
-          # DATABASE_URL: prefer repo secret, else local postgres service (localhost in Actions)
+
+          # DATABASE_URL: prefer repo secret, else force TCP to 127.0.0.1 for services.postgres
           if [ -n "${{ secrets.DATABASE_URL }}" ]; then
             echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
           else
-            echo "DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}" >> $GITHUB_ENV
+            echo "DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@127.0.0.1:5432/${POSTGRES_DB}" >> $GITHUB_ENV
           fi
 
       - name: Install pg_isready (small dep)
@@ -61,7 +62,7 @@ jobs:
       - name: Wait for Postgres
         run: |
           for i in {1..30}; do
-            if pg_isready -h localhost -p 5432 -U "$POSTGRES_USER" -q; then
+            if pg_isready -h 127.0.0.1 -p 5432 -U "$POSTGRES_USER" -q; then
               echo "Postgres is ready"
               break
             fi
@@ -84,15 +85,16 @@ jobs:
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
 
-      - name: Deploy to server (SSH)
+      - name: Set up SSH agent
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
+
       - name: Remote deploy
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
-            docker stop myapp || true
-            docker rm myapp || true
-            docker run -d --name myapp -p 80:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+          docker stop myapp || true
+          docker rm myapp || true
+          docker run -d --name myapp -p 80:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
                     EOF
